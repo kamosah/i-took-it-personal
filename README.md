@@ -30,3 +30,15 @@ Deployment:
 - Vercel (frontend)
 - Railway/Digital Ocean/Render (backend)
 - Managed PostgreSQL instance
+
+
+### App TODO
+
+- [ ] Sitemap
+- [ ] Robots.txt
+- [ ] JSON-LD Structured Data
+- [ ] Update Page Component with Metadata
+
+Up to Step 7 and BlogJsonLd
+
+

@@ -45,6 +45,9 @@ Thumbs.db
 .next
 out
 
+# Environment variables
+.env
+
 test-output
 
 .cursor/rules/nx-rules.mdc

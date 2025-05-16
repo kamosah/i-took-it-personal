@@ -1,92 +1,79 @@
+// src/components/RichTextRenderer.tsx
 import { documentToReactComponents } from '@contentful/rich-text-react-renderer';
 import { BLOCKS, MARKS, INLINES } from '@contentful/rich-text-types';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
-import { Heading, Text, Link, Box, Code, List, Image } from '@chakra-ui/react';
+import Image from 'next/image';
+import Link from 'next/link';
 
-export function RichTextRenderer({ content }) {
+export default function RichTextRenderer({ content, contentLinks }) {
+  // Function to get asset details from references
+  const getAsset = (assetId) => {
+    if (!contentLinks?.assets?.block) return null;
+
+    return contentLinks.assets.block.find((asset) => asset.sys.id === assetId);
+  };
+
   const options = {
     renderMark: {
       [MARKS.BOLD]: (text) => <strong>{text}</strong>,
       [MARKS.ITALIC]: (text) => <em>{text}</em>,
-      [MARKS.CODE]: (text) => <Code>{text}</Code>,
+      [MARKS.CODE]: (text) => <code className="inline-code">{text}</code>,
     },
     renderNode: {
-      [BLOCKS.PARAGRAPH]: (node, children) => <Text mb={4}>{children}</Text>,
-      [BLOCKS.HEADING_1]: (node, children) => (
-        <Heading as="h1" size="2xl" mb={4} mt={8} id={createSlug(children)}>
-          {children}
-        </Heading>
-      ),
+      [BLOCKS.PARAGRAPH]: (node, children) => <p>{children}</p>,
+      [BLOCKS.HEADING_1]: (node, children) => <h1>{children}</h1>,
       [BLOCKS.HEADING_2]: (node, children) => (
-        <Heading as="h2" size="xl" mb={4} mt={8} id={createSlug(children)}>
-          {children}
-        </Heading>
+        <h2 id={createSlug(children)}>{children}</h2>
       ),
       [BLOCKS.HEADING_3]: (node, children) => (
-        <Heading as="h3" size="lg" mb={4} mt={6} id={createSlug(children)}>
-          {children}
-        </Heading>
+        <h3 id={createSlug(children)}>{children}</h3>
       ),
       [BLOCKS.HEADING_4]: (node, children) => (
-        <Heading as="h4" size="md" mb={4} mt={6} id={createSlug(children)}>
-          {children}
-        </Heading>
+        <h4 id={createSlug(children)}>{children}</h4>
       ),
-      [BLOCKS.UL_LIST]: (node, children) => (
-        <List.Root mb={4}>{children}</List.Root>
-      ),
-      [BLOCKS.OL_LIST]: (node, children) => (
-        <List.Root as="ol" mb={4}>
-          {children}
-        </List.Root>
-      ),
-      [BLOCKS.LIST_ITEM]: (node, children) => <List.Root>{children}</List.Root>,
-      [BLOCKS.HR]: () => <Box divideY="6px" />,
+      [BLOCKS.HEADING_5]: (node, children) => <h5>{children}</h5>,
+      [BLOCKS.HEADING_6]: (node, children) => <h6>{children}</h6>,
+      [BLOCKS.UL_LIST]: (node, children) => <ul>{children}</ul>,
+      [BLOCKS.OL_LIST]: (node, children) => <ol>{children}</ol>,
+      [BLOCKS.LIST_ITEM]: (node, children) => <li>{children}</li>,
+      [BLOCKS.QUOTE]: (node, children) => <blockquote>{children}</blockquote>,
+      [BLOCKS.HR]: () => <hr />,
       [BLOCKS.EMBEDDED_ASSET]: (node) => {
-        const { title, description, file } = node.data.target.fields;
+        const assetId = node.data.target.sys.id;
+        const asset = getAsset(assetId);
+
+        if (!asset) return null;
+
         return (
-          <Box my={6}>
+          <div className="embedded-asset">
             <Image
-              src={file.url}
-              alt={description || title}
-              borderRadius="md"
+              src={asset.url}
+              alt={asset.description || asset.title || ''}
+              width={asset.width || 800}
+              height={asset.height || 600}
+              className="content-image"
             />
-            {description && (
-              <Text fontSize="sm" color="gray.600" mt={2} textAlign="center">
-                {description}
-              </Text>
-            )}
-          </Box>
+            {asset.description && <figcaption>{asset.description}</figcaption>}
+          </div>
         );
+      },
+      [INLINES.HYPERLINK]: (node, children) => {
+        const { uri } = node.data;
+
+        // External links
+        if (uri.startsWith('http')) {
+          return (
+            <a href={uri} target="_blank" rel="noopener noreferrer">
+              {children}
+            </a>
+          );
+        }
+
+        // Internal links
+        return <Link href={uri}>{children}</Link>;
       },
       [BLOCKS.EMBEDDED_ENTRY]: (node) => {
-        // Handle embedded entries as needed
-        return <Box>Embedded content</Box>;
-      },
-      [INLINES.HYPERLINK]: (node, children) => (
-        <Link color="purple.500" href={node.data.uri} isExternal>
-          {children}
-        </Link>
-      ),
-      [BLOCKS.CODE]: (node) => {
-        const { code, language = '' } = node;
-        return (
-          <Box my={6} borderRadius="md" overflow="hidden">
-            <SyntaxHighlighter
-              language={language.toLowerCase()}
-              style={vscDarkPlus}
-              showLineNumbers
-              customStyle={{
-                margin: 0,
-                borderRadius: '0.375rem',
-                fontSize: '0.9rem',
-              }}
-            >
-              {code}
-            </SyntaxHighlighter>
-          </Box>
-        );
+        // Handle embedded entries (if you have any)
+        return <div>Embedded entry</div>;
       },
     },
   };
@@ -94,7 +81,7 @@ export function RichTextRenderer({ content }) {
   return <>{documentToReactComponents(content, options)}</>;
 }
 
-// Helper to create slug from heading text
+// Helper function to create slug from heading text
 function createSlug(text) {
   return text
     .toString()
