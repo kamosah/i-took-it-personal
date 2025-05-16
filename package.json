@@ -2,7 +2,9 @@
   "name": "@i-took-it-personal/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "generate": "graphql-codegen --config codegen.ts"
+  },
   "private": true,
   "dependencies": {
     "@chakra-ui/react": "^3.19.0",
@@ -11,6 +13,7 @@
     "@emotion/react": "^11.14.0",
     "@tanstack/react-query": "^5.76.1",
     "contentful": "^11.5.22",
+    "dotenv": "^16.5.0",
     "framer-motion": "^12.11.4",
     "graphql-request": "^7.1.2",
     "next": "~15.2.4",
@@ -24,6 +27,11 @@
     "@eslint/compat": "^1.1.1",
     "@eslint/eslintrc": "^2.1.1",
     "@eslint/js": "^9.8.0",
+    "@graphql-codegen/cli": "^5.0.6",
+    "@graphql-codegen/near-operation-file-preset": "^3.0.0",
+    "@graphql-codegen/typescript": "^4.1.6",
+    "@graphql-codegen/typescript-operations": "^4.6.1",
+    "@graphql-codegen/typescript-react-query": "^6.1.0",
     "@next/eslint-plugin-next": "^15.2.4",
     "@nx/devkit": "21.0.3",
     "@nx/eslint": "21.0.3",

@@ -102,7 +102,7 @@ export async function fetchBlogPostBySlug(slug: string, preview = false) {
   };
 }
 
-export async function fetchBlogPosts({
+export const fetchBlogPosts = async ({
   tag,
   page = 1,
   limit = 10,
@@ -112,7 +112,7 @@ export async function fetchBlogPosts({
   page?: number;
   limit?: number;
   preview?: boolean;
-} = {}) {
+} = {}) => {
   const skip = (page - 1) * limit;
 
   const query = gql`
@@ -181,4 +181,4 @@ export async function fetchBlogPosts({
     total: data.blogPostCollection.total,
     totalPages: Math.ceil(data.blogPostCollection.total / limit),
   };
-}
+};
