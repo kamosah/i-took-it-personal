@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { fetchBlogPostBySlug, fetchBlogPosts } from '@/lib/contentful';
 import RichTextRenderer from '@/components/ui/RichTextRenderer';
+import BlogJsonLd from '@/components/ui/BlogJsonLd';
 import { Heading, Text } from '@chakra-ui/react/typography';
 import { Box } from '@chakra-ui/react/box';
 import { formatDate } from '@/lib/date';
@@ -52,6 +53,7 @@ export default async function BlogPostPage({
 
   return (
     <Box maxW="800px" mx="auto" p={4}>
+      <BlogJsonLd post={post} />
       <Heading as="h1" mb={4}>
         {post.title}
       </Heading>
