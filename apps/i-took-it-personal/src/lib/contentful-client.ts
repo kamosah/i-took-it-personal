@@ -1,6 +1,6 @@
 // src/lib/contentful-client.ts
 import { createClient } from 'contentful';
-import { request, gql } from 'graphql-request';
+import { request } from 'graphql-request';
 
 // Regular Contentful client
 export const contentfulClient = createClient({
@@ -21,11 +21,11 @@ export function getClient(preview = false) {
 }
 
 // GraphQL client for more efficient queries
-export const contentfulGraphQLClient = async (
+export const contentfulGraphQLClient = async <T = any>(
   query: string,
   variables = {},
   preview = false
-) => {
+): Promise<T> => {
   const url = `https://${
     preview ? 'preview' : 'graphql'
   }.contentful.com/content/v1/spaces/${process.env.CONTENTFUL_SPACE_ID}`;
@@ -34,7 +34,11 @@ export const contentfulGraphQLClient = async (
     ? process.env.CONTENTFUL_PREVIEW_TOKEN
     : process.env.CONTENTFUL_ACCESS_TOKEN;
 
-  return request(url, query, variables, {
+  if (!token) {
+    throw new Error('Contentful access token is not configured');
+  }
+
+  return request<T>(url, query, variables, {
     Authorization: `Bearer ${token}`,
   });
 };

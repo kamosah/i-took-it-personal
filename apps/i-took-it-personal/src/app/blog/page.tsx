@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { fetchBlogPosts } from '@/lib/contentful';
 import { Box, Heading, SimpleGrid, Flex, Tag, Text } from '@chakra-ui/react';
 import Image from 'next/image';
+import { formatDate } from '@/lib/date';
 
 // Generate static params for all possible combinations
 export async function generateStaticParams() {
@@ -116,8 +117,7 @@ export default async function BlogPage({
                     {post.title}
                   </Heading>
                   <Text color="gray.600" fontSize="sm" mb={3}>
-                    {new Date(post.publicationDate).toISOString().split('T')[0]}{' '}
-                    • {post.author.name}
+                    {formatDate(post.publicationDate)} • {post.author.name}
                   </Text>
                   <Text
                     mt={2}

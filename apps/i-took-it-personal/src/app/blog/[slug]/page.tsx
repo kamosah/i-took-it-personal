@@ -4,6 +4,9 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { fetchBlogPostBySlug, fetchBlogPosts } from '@/lib/contentful';
 import RichTextRenderer from '@/components/ui/RichTextRenderer';
+import { Heading, Text } from '@chakra-ui/react/typography';
+import { Box } from '@chakra-ui/react/box';
+import { formatDate } from '@/lib/date';
 // import BlogJsonLd from '@/components/BlogJsonLd';
 
 export async function generateStaticParams() {
@@ -40,54 +43,43 @@ export default async function BlogPostPage({
 }: {
   params: { slug: string };
 }) {
-  const post = await fetchBlogPostBySlug(params.slug);
+  const routeParams = await params;
+  const post = await fetchBlogPostBySlug(routeParams.slug);
 
   if (!post) {
     notFound();
   }
 
   return (
-    <article className="blog-post">
-      {/* <BlogJsonLd post={post} /> */}
+    <Box maxW="800px" mx="auto" p={4}>
+      <Heading as="h1" mb={4}>
+        {post.title}
+      </Heading>
 
-      <h1>{post.originalTitle}</h1>
+      <Text color="gray.600" mb={6}>
+        {formatDate(post.publicationDate)} · {post.author?.name}
+      </Text>
 
       {post.featuredImage && (
-        <Image
-          src={post.featuredImage.url}
-          alt={post.featuredImage.alt}
-          width={800}
-          height={400}
-          priority
-          className="featured-image"
-        />
+        <Box mb={6}>
+          <Image
+            src={post.featuredImage.url}
+            alt={post.featuredImage.alt || post.title || ''}
+            width={800}
+            height={400}
+            style={{ objectFit: 'cover', borderRadius: '0.5rem' }}
+          />
+        </Box>
       )}
 
-      <div className="meta">
-        <div className="author">By {post.author.name}</div>
-        <time dateTime={post.publishedDate}>
-          {new Date(post.publishedDate).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })}
-        </time>
-      </div>
-
-      <div className="tags">
-        {post.tags.map((tag) => (
-          <a href={`/blog/tag/${tag.slug}`} key={tag.slug} className="tag">
-            {tag.name}
-          </a>
-        ))}
-      </div>
-
-      <div className="content">
-        <RichTextRenderer
-          content={post.content}
-          contentLinks={post.contentLinks}
-        />
-      </div>
-    </article>
+      {post.content && (
+        <Box className="blog-content">
+          <RichTextRenderer
+            content={post.content}
+            contentLinks={post.contentLinks}
+          />
+        </Box>
+      )}
+    </Box>
   );
 }

@@ -2,13 +2,66 @@
 import { gql } from 'graphql-request';
 import { contentfulGraphQLClient } from './contentful-client';
 
+interface BlogPostResponse {
+  blogPostCollection: {
+    items: Array<{
+      sys: {
+        id: string;
+        publishedAt: string;
+      };
+      title: string;
+      slug: string;
+      publicationDate: string;
+      excerpt: string;
+      seoTitle?: string;
+      seoDescription?: string;
+      canonicalUrl?: string;
+      featuredImage?: {
+        url: string;
+        title: string;
+        description?: string;
+        width: number;
+        height: number;
+      };
+      author?: {
+        name: string;
+        bio?: string;
+        avatar?: {
+          url: string;
+        };
+      };
+      tagsCollection?: {
+        items: Array<{
+          name: string;
+          slug: string;
+        }>;
+      };
+      content?: {
+        json: any;
+        links: {
+          assets: {
+            block: Array<{
+              sys: {
+                id: string;
+              };
+              url: string;
+              title: string;
+              description?: string;
+            }>;
+          };
+        };
+      };
+    }>;
+  };
+}
+
 // Fetch a single blog post by slug
 export async function fetchBlogPostBySlug(slug: string, preview = false) {
   const query = gql`
     query BlogPostBySlug($slug: String!) {
       blogPostCollection(where: { slug: $slug }, preview: ${preview}, limit: 1) {
         items {
-          usys {
+          sys {
             id
             publishedAt
           }
@@ -59,47 +112,51 @@ export async function fetchBlogPostBySlug(slug: string, preview = false) {
     }
   `;
 
-  const data = await contentfulGraphQLClient(query, { slug }, preview);
+  try {
+    const data = await contentfulGraphQLClient<BlogPostResponse>(query, { slug }, preview);
+    if (!data?.blogPostCollection?.items?.length) {
+      return null;
+    }
 
-  if (!data.blogPostCollection.items.length) {
-    return null;
+    const post = data.blogPostCollection.items[0];
+
+    return {
+      id: post.sys.id,
+      title: post.seoTitle || post.title,
+      originalTitle: post.title,
+      description: post.seoDescription || post.excerpt,
+      slug: post.slug,
+      publishedDate: post.publicationDate,
+      canonicalUrl: post.canonicalUrl,
+      excerpt: post.excerpt,
+      featuredImage: post.featuredImage
+        ? {
+            url: post.featuredImage.url,
+            width: post.featuredImage.width,
+            height: post.featuredImage.height,
+            alt:
+              post.featuredImage.description ||
+              post.featuredImage.title ||
+              post.title,
+          }
+        : null,
+      author: post.author ? {
+        name: post.author.name,
+        bio: post.author.bio,
+        avatar: post.author.avatar?.url,
+      } : null,
+      tags: post.tagsCollection?.items?.map((tag) => ({
+        name: tag.name,
+        slug: tag.slug,
+      })) || [],
+      content: post.content?.json,
+      contentLinks: post.content?.links,
+      publicationDate: post.publicationDate,
+    };
+  } catch (error) {
+    console.error('Error fetching blog post:', error);
+    throw error;
   }
-
-  const post = data.blogPostCollection.items[0];
-
-  return {
-    id: post.sys.id,
-    title: post.seoTitle || post.title,
-    originalTitle: post.title,
-    description: post.seoDescription || post.excerpt,
-    slug: post.slug,
-    publishedDate: post.publishedDate,
-    canonicalUrl: post.canonicalUrl,
-    excerpt: post.excerpt,
-    featuredImage: post.featuredImage
-      ? {
-          url: post.featuredImage.url,
-          width: post.featuredImage.width,
-          height: post.featuredImage.height,
-          alt:
-            post.featuredImage.description ||
-            post.featuredImage.title ||
-            post.title,
-        }
-      : null,
-    author: {
-      name: post.author.name,
-      bio: post.author.bio,
-      avatar: post.author.avatar?.url,
-    },
-    tags: post.tagsCollection.items.map((tag) => ({
-      name: tag.name,
-      slug: tag.slug,
-    })),
-    content: post.content.json,
-    contentLinks: post.content.links,
-    publicationDate: post.publicationDate,
-  };
 }
 
 export const fetchBlogPosts = async ({
